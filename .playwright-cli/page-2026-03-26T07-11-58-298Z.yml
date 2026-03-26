@@ -1,0 +1,70 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e18]
+  - main [ref=e21]:
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - paragraph [ref=e25]: 会话区
+          - heading "你好，codexui07" [level=2] [ref=e26]
+          - paragraph [ref=e27]: 管理聊天会话与知识库文档
+        - generic [ref=e28]:
+          - button "新建会话" [ref=e29]
+          - button "退出登录" [ref=e30]
+        - paragraph [ref=e32]: 聊天记录
+        - paragraph [ref=e34]: 知识库
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - paragraph [ref=e39]: 聊天工作台
+              - heading "选择会话开始聊天" [level=1] [ref=e40]
+            - generic [ref=e41]:
+              - button "导出 Markdown" [ref=e42]
+              - button "导出 JSON" [ref=e43]
+          - generic [ref=e44]:
+            - generic [ref=e45]:
+              - checkbox "开启上下文" [checked] [ref=e46]
+              - text: 开启上下文
+            - generic [ref=e47]: 当前模型：未设置
+            - generic [ref=e48]: 状态：准备就绪
+        - generic [ref=e50]: 创建或选择一个会话，然后配置模型并开始提问。
+        - generic [ref=e51]:
+          - textbox "输入你的问题、任务描述或 Agent 指令..." [ref=e52]
+          - generic [ref=e53]:
+            - generic [ref=e54]:
+              - textbox "系统提示词" [ref=e55]: 你是一个可靠的 AI Agent 助手，请优先给出清晰、可执行的答案。
+              - generic [ref=e56] [cursor=pointer]: 上传附件
+            - button "发送消息" [disabled] [ref=e57]
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - paragraph [ref=e60]: 模型与控制
+          - heading "配置中心" [level=2] [ref=e61]
+          - paragraph [ref=e62]: 保存模型 API，切换默认模型，维护知识库。
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - heading "已保存模型" [level=3] [ref=e65]
+            - combobox [ref=e66]:
+              - option "请选择模型配置" [selected]
+          - generic [ref=e67]:
+            - heading "新增模型配置" [level=3] [ref=e68]
+            - textbox "配置名称，例如 OpenAI 主账号" [ref=e69]
+            - combobox [ref=e70]:
+              - option "OpenAI" [selected]
+              - option "阿里云百炼"
+              - option "DeepSeek"
+              - option "兼容 OpenAI"
+            - textbox "模型名称" [ref=e71]: gpt-4.1-mini
+            - textbox "Base URL" [ref=e72]: https://api.openai.com/v1
+            - textbox "API Key" [ref=e73]
+            - generic [ref=e74]:
+              - checkbox "支持图片输入" [checked] [ref=e75]
+              - text: 支持图片输入
+            - generic [ref=e76]:
+              - checkbox "保存为默认模型" [checked] [ref=e77]
+              - text: 保存为默认模型
+            - button "保存模型配置" [ref=e78]
+          - generic [ref=e79]:
+            - heading "新建知识库" [level=3] [ref=e80]
+            - textbox "知识库名称" [ref=e81]
+            - textbox "知识库描述" [ref=e82]
+            - button "创建知识库" [ref=e83]

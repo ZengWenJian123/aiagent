@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String                @id @default(cuid())
+  username          String                @unique
+  email             String                @unique
+  passwordHash      String
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  modelConfigs      ModelProviderConfig[]
+  chatSessions      ChatSession[]
+  knowledgeBases    KnowledgeBase[]
+  attachments       Attachment[]
+}
+
+model ModelProviderConfig {
+  id              String        @id @default(cuid())
+  userId          String
+  provider        String
+  label           String
+  model           String
+  baseUrl         String
+  apiKeyEncrypted String
+  supportsVision  Boolean       @default(false)
+  isDefault       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatSessions    ChatSession[]
+
+  @@index([userId])
+}
+
+model ChatSession {
+  id                String               @id @default(cuid())
+  userId            String
+  providerConfigId  String?
+  title             String
+  systemPrompt      String?
+  useContext        Boolean              @default(true)
+  exportedAt        DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerConfig    ModelProviderConfig? @relation(fields: [providerConfigId], references: [id], onDelete: SetNull)
+  messages          ChatMessage[]
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id             String      @id @default(cuid())
+  sessionId      String
+  role           String
+  content        String
+  reasoning      String?
+  citationsJson  String?
+  attachmentsJson String?
+  createdAt      DateTime    @default(now())
+  session        ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model KnowledgeBase {
+  id          String              @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  status      String              @default("READY")
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents   KnowledgeDocument[]
+
+  @@index([userId])
+}
+
+model KnowledgeDocument {
+  id             String          @id @default(cuid())
+  knowledgeBaseId String
+  fileName       String
+  mimeType       String
+  storagePath    String
+  parseStatus    String          @default("PENDING")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  knowledgeBase  KnowledgeBase   @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  chunks         DocumentChunk[]
+
+  @@index([knowledgeBaseId])
+}
+
+model DocumentChunk {
+  id          String            @id @default(cuid())
+  documentId  String
+  chunkIndex  Int
+  content     String
+  embedding   String
+  createdAt   DateTime          @default(now())
+  document    KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  userId      String
+  fileName    String
+  mimeType    String
+  storagePath String
+  fileSize    Int
+  purpose     String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
