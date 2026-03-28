@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className={`${manrope.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }
