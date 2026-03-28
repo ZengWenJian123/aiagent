@@ -21,21 +21,21 @@
 
 ### 首页 / Home Page
 
-![Home Page](https://via.placeholder.com/1200x675/1e293b/ffffff?text=Orbital+Agent+Hub+-+Home+Page)
+![Home Page](./screenshots/home.png)
 
 *现代化深色主题设计，展示应用核心功能*
 *Modern dark theme design showcasing core features*
 
 ### 认证页面 / Authentication Page
 
-![Auth Page](https://via.placeholder.com/1200x675/1e293b/ffffff?text=Login+%2F+Register+Page)
+![Auth Page](./screenshots/auth.png)
 
 *简洁的用户注册和登录界面*
 *Clean user registration and login interface*
 
 ### 聊天工作台 / Chat Workspace
 
-![Chat Page](https://via.placeholder.com/1200x675/1e293b/ffffff?text=Chat+Workspace)
+![Chat Page](./screenshots/chat.png)
 
 *三栏布局：会话管理 | 聊天区域 | 配置中心*
 *Three-column layout: Session Management | Chat Area | Configuration Center*
