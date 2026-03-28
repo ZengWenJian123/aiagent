@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -580,7 +582,6 @@ export function ChatApp({ user }: { user: User }) {
               placeholder="输入你的问题、任务描述或 Agent 指令..."
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              disabled={isStreaming}
             />
             <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
               <div className="space-y-3">
