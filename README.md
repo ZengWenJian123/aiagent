@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**通用 AI Agent 聊天 Web 应用**
+**通用 AI Agent 聊天 Web 的应用**
 
 *A Unified AI Agent Chat Web Application*
 
