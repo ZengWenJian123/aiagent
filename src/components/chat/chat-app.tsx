@@ -10,6 +10,7 @@ type User = {
   id: string;
   username: string;
   email: string;
+  role?: string;
 };
 
 type ProviderConfig = {
@@ -471,6 +472,9 @@ export function ChatApp({ user }: { user: User }) {
               <div className="flex flex-wrap gap-2">
                 <Button variant="secondary" onClick={() => exportSession("md")}>导出 Markdown</Button>
                 <Button variant="secondary" onClick={() => exportSession("json")}>导出 JSON</Button>
+                {user.role === "admin" && (
+                  <Button onClick={() => router.push("/admin")}>管理后台</Button>
+                )}
               </div>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-300">
@@ -600,8 +604,17 @@ export function ChatApp({ user }: { user: User }) {
               <div className="space-y-2">
                 {configs.map((config) => (
                   <div key={config.id} className="rounded-2xl bg-slate-900/80 p-3 text-sm text-slate-200">
-                    <p className="font-medium text-white">{config.label}</p>
-                    <p className="mt-1 text-xs text-slate-400">{config.provider} · {config.baseUrl}</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-white">{config.label}</p>
+                        <p className="mt-1 text-xs text-slate-400">{config.provider} · {config.baseUrl}</p>
+                      </div>
+                      {(config as any).isGlobal && (
+                        <span className="rounded-full bg-cyan-400/20 px-2 py-0.5 text-xs text-cyan-300">
+                          全局
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-1 text-xs text-slate-500">{config.isDefault ? "默认配置" : "可切换"}</p>
                   </div>
                 ))}

@@ -83,3 +83,40 @@ export async function requireUserId() {
   return user.id;
 }
 
+export async function requireAdmin() {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/auth");
+  }
+  if (user.role !== "admin") {
+    throw new Error("FORBIDDEN");
+  }
+  return user;
+}
+
+export async function isAdmin(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+  return user?.role === "admin";
+}
+
+export async function getCurrentUserWithRole() {
+  const store = await cookies();
+  const session = store.get(SESSION_COOKIE)?.value;
+  if (!session) return null;
+
+  try {
+    const { payload } = await jwtVerify(session, getJwtSecret());
+    const userId = typeof payload.userId === "string" ? payload.userId : null;
+    if (!userId) return null;
+    return prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, username: true, email: true, role: true, createdAt: true },
+    });
+  } catch {
+    return null;
+  }
+}
+

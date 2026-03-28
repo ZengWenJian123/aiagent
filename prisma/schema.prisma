@@ -12,6 +12,7 @@ model User {
   username          String                @unique
   email             String                @unique
   passwordHash      String
+  role              String                @default("user")  // "admin" or "user"
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
   modelConfigs      ModelProviderConfig[]
@@ -22,7 +23,7 @@ model User {
 
 model ModelProviderConfig {
   id              String        @id @default(cuid())
-  userId          String
+  userId          String?       // null for global configs
   provider        String
   label           String
   model           String
@@ -30,9 +31,10 @@ model ModelProviderConfig {
   apiKeyEncrypted String
   supportsVision  Boolean       @default(false)
   isDefault       Boolean       @default(false)
+  isGlobal        Boolean       @default(false)  // true for admin-created global configs
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   chatSessions    ChatSession[]
 
   @@index([userId])

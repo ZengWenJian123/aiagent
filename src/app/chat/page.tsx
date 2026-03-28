@@ -1,7 +1,11 @@
 ﻿import { ChatApp } from "@/components/chat/chat-app";
-import { requireUser } from "@/lib/auth";
+import { getCurrentUserWithRole } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function ChatPage() {
-  const user = await requireUser();
+  const user = await getCurrentUserWithRole();
+  if (!user) {
+    redirect("/auth");
+  }
   return <ChatApp user={user} />;
 }
