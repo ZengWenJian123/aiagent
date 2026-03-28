@@ -1,7 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { AttachmentSummary, Citation, ProviderType } from "@/lib/types";
 import { Button, Input, SectionCard, Textarea } from "@/components/ui";
 import { cn, formatDate, parseJsonSafely } from "@/lib/utils";
@@ -57,6 +59,13 @@ type KnowledgeBase = {
   documents: KnowledgeDocument[];
 };
 
+type MessageQueueItem = {
+  id: string;
+  content: string;
+  attachments: AttachmentSummary[];
+  timestamp: number;
+};
+
 async function readJson<T>(response: Response) {
   const data = (await response.json().catch(() => null)) as T;
   if (!response.ok) {
@@ -82,7 +91,8 @@ export function ChatApp({ user }: { user: User }) {
     "你是一个可靠的 AI Agent 助手，请优先给出清晰、可执行的答案。",
   );
   const [useContext, setUseContext] = useState(true);
-  const [pending, setPending] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [messageQueue, setMessageQueue] = useState<MessageQueueItem[]>([]);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("准备就绪");
 
@@ -113,6 +123,14 @@ export function ChatApp({ user }: { user: User }) {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (messageQueue.length > 0 && !isStreaming) {
+      const nextMessage = messageQueue[0];
+      setMessageQueue((current) => current.slice(1));
+      void sendQueuedMessage(nextMessage);
+    }
+  }, [messageQueue, isStreaming]);
 
   async function bootstrap() {
     try {
@@ -267,25 +285,20 @@ export function ChatApp({ user }: { user: User }) {
     }
   }
 
-  async function sendMessage() {
-    if (!selectedSessionId) {
-      await createSession();
-      return;
-    }
-
-    if (!selectedConfigId || !message.trim()) return;
+  async function sendQueuedMessage(queueItem: MessageQueueItem) {
+    if (!selectedSessionId || !selectedConfigId) return;
 
     const userMessage: ChatMessage = {
-      id: `local-user-${Date.now()}`,
+      id: queueItem.id,
       role: "user",
-      content: message,
+      content: queueItem.content,
       citationsJson: null,
-      attachmentsJson: attachments.length ? JSON.stringify(attachments) : null,
+      attachmentsJson: queueItem.attachments.length ? JSON.stringify(queueItem.attachments) : null,
       createdAt: new Date().toISOString(),
     };
 
     const assistantPlaceholder: ChatMessage = {
-      id: `local-assistant-${Date.now()}`,
+      id: `assistant-${Date.now()}`,
       role: "assistant",
       content: "",
       citationsJson: null,
@@ -293,10 +306,8 @@ export function ChatApp({ user }: { user: User }) {
       createdAt: new Date().toISOString(),
     };
 
-    const outgoingMessage = message;
-    setPending(true);
+    setIsStreaming(true);
     setError("");
-    setMessage("");
     setMessages((current) => [...current, userMessage, assistantPlaceholder]);
 
     try {
@@ -306,8 +317,8 @@ export function ChatApp({ user }: { user: User }) {
         body: JSON.stringify({
           sessionId: selectedSessionId,
           providerConfigId: selectedConfigId,
-          message: outgoingMessage,
-          attachmentIds: attachments.map((item) => item.id),
+          message: queueItem.content,
+          attachmentIds: queueItem.attachments.map((item) => item.id),
           knowledgeBaseIds: selectedKnowledgeBaseIds,
           useContext,
           systemPrompt,
@@ -354,10 +365,26 @@ export function ChatApp({ user }: { user: User }) {
       await loadMessages(selectedSessionId);
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : "发送消息失败");
-      setMessages((current) => current.slice(0, -1));
+      setMessages((current) => current.filter((m) => m.id !== assistantPlaceholder.id));
     } finally {
-      setPending(false);
+      setIsStreaming(false);
     }
+  }
+
+  function handleSendMessage() {
+    if (!message.trim()) return;
+
+    const newQueueItem: MessageQueueItem = {
+      id: `user-${Date.now()}`,
+      content: message,
+      attachments: [...attachments],
+      timestamp: Date.now(),
+    };
+
+    setMessageQueue((current) => [...current, newQueueItem]);
+    setMessage("");
+    setAttachments([]);
+    setStatus("消息已加入队列");
   }
 
   async function exportSession(format: "md" | "json") {
@@ -488,6 +515,9 @@ export function ChatApp({ user }: { user: User }) {
               </label>
               <span>当前模型：{selectedConfig ? `${selectedConfig.label} / ${selectedConfig.model}` : "未设置"}</span>
               <span>状态：{status}</span>
+              {messageQueue.length > 0 && (
+                <span className="text-cyan-300">队列：{messageQueue.length} 条消息等待发送</span>
+              )}
             </div>
           </div>
 
@@ -508,7 +538,15 @@ export function ChatApp({ user }: { user: User }) {
                     <p className="text-sm font-semibold text-white">{item.role === "user" ? "用户" : "助手"}</p>
                     <span className="text-xs text-slate-400">{formatDate(item.createdAt)}</span>
                   </div>
-                  <div className="whitespace-pre-wrap text-sm leading-7 text-slate-100">{item.content || "正在生成..."}</div>
+                  {item.role === "assistant" ? (
+                    <div className="prose prose-invert prose-sm max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {item.content || "正在生成..."}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap text-sm leading-7 text-slate-100">{item.content}</div>
+                  )}
                   {fileList.length ? (
                     <div className="mt-4 flex flex-wrap gap-2">
                       {fileList.map((file) => (
@@ -542,6 +580,7 @@ export function ChatApp({ user }: { user: User }) {
               placeholder="输入你的问题、任务描述或 Agent 指令..."
               value={message}
               onChange={(event) => setMessage(event.target.value)}
+              disabled={isStreaming}
             />
             <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
               <div className="space-y-3">
@@ -571,8 +610,12 @@ export function ChatApp({ user }: { user: User }) {
                   />
                 </label>
               </div>
-              <Button className="h-12 px-6" onClick={sendMessage} disabled={pending || !selectedConfigId}>
-                {pending ? "生成中..." : "发送消息"}
+              <Button 
+                className="h-12 px-6" 
+                onClick={handleSendMessage} 
+                disabled={!selectedConfigId}
+              >
+                {messageQueue.length > 0 ? `发送 (${messageQueue.length + 1})` : "发送消息"}
               </Button>
             </div>
             {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}

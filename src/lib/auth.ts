@@ -86,7 +86,7 @@ export async function requireUserId() {
 export async function requireAdmin() {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/auth");
+    throw new Error("UNAUTHORIZED");
   }
   if (user.role !== "admin") {
     throw new Error("FORBIDDEN");
